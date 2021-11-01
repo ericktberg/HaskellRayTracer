@@ -28,13 +28,13 @@ dotProduct :: Vector -> Vector -> Float
 dotProduct (Vector ax ay az) (Vector bx by bz) = ax * bx + ay * by + az * bz
 
 normalize :: Vector -> Vector
-normalize vector = 
-    let 
+normalize vector =
+    let
         (Vector vx vy vz) = vector
         magnitude = vectorLength vector
-    in 
+    in
         Vector (vx / magnitude) (vy / magnitude) (vz / magnitude)
-        
+
 vectorFromPoints :: Point -> Point -> Vector
 vectorFromPoints (Point p1x p1y p1z) (Point p2x p2y p2z) = Vector (p2x - p1x) (p2y - p1y) (p2z - p1z)
 
@@ -108,17 +108,20 @@ getIsometricRays (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) uni
     in
         concatMap getRow [0..viewHeight - 1]
 
-castRays :: [Ray] -> Triangle -> [Bool]
-castRays rays triangle = map (`doesRayIntersectTriangle` triangle) rays
+castRays :: [Ray] -> [Triangle] -> [Bool]
+castRays rays triangles = map (\r -> any (doesRayIntersectTriangle r) triangles) rays
 
-getBoolChar :: Bool -> Char 
-getBoolChar b = do 
+getBoolChar :: Bool -> Char
+getBoolChar b = do
     if b
     then 'o'
     else '.'
 
-getTestTriangle :: Triangle
-getTestTriangle = Triangle (Point (-1) (-1) 5) (Point 0 1 5)  (Point 1 (-1) 5)
+getTestTriangles :: [Triangle]
+getTestTriangles = [
+        Triangle (Point (-2) (-1) 5) (Point 0 2 5)  (Point 1 (-2) 5),
+        Triangle (Point 0 0 3) (Point 2 (-1) 4) (Point 1.5 (-1.5) 6)
+    ]
 
 chunks :: Int -> [a] -> [[a]]
 chunks _ [] = []
@@ -127,11 +130,11 @@ chunks n xs =
     in  ys : chunks n zs
 
 renderAsciiViewPort :: Int -> Int -> [Char]
-renderAsciiViewPort width height = concatMap (\s -> s ++ "\r\n") (chunks width (map getBoolChar (castRays (getIsometricRays (ViewPort width height) (Rectangle (Point 0 0 0) 5 5) (Vector 0 0 1)) getTestTriangle)))
+renderAsciiViewPort width height = concatMap (\s -> s ++ "\r\n") (chunks width (map getBoolChar (castRays (getIsometricRays (ViewPort width height) (Rectangle (Point 0 0 0) 5 5) (Vector 0 0 1)) getTestTriangles)))
 
 testRayIntersection :: Ray -> Triangle -> IO ()
-testRayIntersection ray triangle = 
-    let 
+testRayIntersection ray triangle =
+    let
         intersection = getIntersectionPoint ray (getPlaneFromTriangle triangle)
         barycentric = getBarycentricPoint intersection triangle
         normal = normalOfTriangle triangle
