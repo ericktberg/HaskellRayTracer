@@ -108,6 +108,17 @@ getIsometricRays (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) uni
     in
         concatMap getRow [0..viewHeight - 1]
 
+getPerspectiveRays :: ViewPort -> Rectangle -> Point -> [Ray]
+getPerspectiveRays  (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) unitWidth unitHeight) point =let
+        widthIncrement = unitWidth / fromIntegral viewWidth;
+        heightIncrement = unitHeight / fromIntegral viewHeight;
+        (Point topLeftX topLeftY topLeftZ) = Point (px - unitWidth / 2) (py + unitHeight / 2) pz
+
+        getPoint rowIndex columnIndex = Point (topLeftX + fromIntegral columnIndex * widthIncrement) (topLeftY - fromIntegral rowIndex * heightIncrement) topLeftZ
+        getRow rowIndex = map (Ray point . vectorFromPoints point . getPoint rowIndex) [0..viewWidth - 1]
+    in
+        concatMap getRow [0..viewHeight - 1]
+
 castRays :: [Ray] -> [Triangle] -> [Bool]
 castRays rays triangles = map (\r -> any (doesRayIntersectTriangle r) triangles) rays
 
@@ -130,7 +141,7 @@ chunks n xs =
     in  ys : chunks n zs
 
 renderAsciiViewPort :: Int -> Int -> [Char]
-renderAsciiViewPort width height = concatMap (\s -> s ++ "\r\n") (chunks width (map getBoolChar (castRays (getIsometricRays (ViewPort width height) (Rectangle (Point 0 0 0) 5 5) (Vector 0 0 1)) getTestTriangles)))
+renderAsciiViewPort width height = concatMap (\s -> s ++ "\r\n") (chunks width (map getBoolChar (castRays (getPerspectiveRays (ViewPort width height) (Rectangle (Point 0 0 0) 5 5) (Point 1 3 (-4))) getTestTriangles)))
 
 testRayIntersection :: Ray -> Triangle -> IO ()
 testRayIntersection ray triangle =
