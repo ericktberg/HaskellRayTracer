@@ -2,14 +2,13 @@ module Main where
 
 data Point = Point Float Float Float deriving Show
 
-data Rectangle = Rectangle
- Point -- the location at center
- Float -- Width in "Units"
- Float -- Height in "Units"
+newtype FieldOfView = FieldOfView Float -- FOV
 
 data Vector = Vector Float Float Float deriving Show
 
 data Triangle = Triangle Point Point Point deriving Show
+
+data Rectangle = Rectangle Point Float Float
 
 data Ray = Ray Point Vector deriving Show
 
@@ -108,6 +107,15 @@ getIsometricRays (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) uni
     in
         concatMap getRow [0..viewHeight - 1]
 
+castFromCamera :: ViewPort -> FieldOfView -> [Ray]
+castFromCamera viewport (FieldOfView fov) =
+    let
+        (ViewPort viewWidth viewHeight) = viewport
+        aspectRatio = fromIntegral viewHeight / fromIntegral viewWidth
+        widthFromFov = 2 * tan (fov * pi / 360)
+    in
+        getPerspectiveRays viewport (Rectangle (Point 0 0 1) widthFromFov (aspectRatio * widthFromFov)) (Point 0 0 0)
+
 getPerspectiveRays :: ViewPort -> Rectangle -> Point -> [Ray]
 getPerspectiveRays  (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) unitWidth unitHeight) point =let
         widthIncrement = unitWidth / fromIntegral viewWidth;
@@ -131,7 +139,7 @@ getBoolChar b = do
 getTestTriangles :: [Triangle]
 getTestTriangles = [
         Triangle (Point (-2) (-1) 5) (Point 0 2 5)  (Point 1 (-2) 5),
-        Triangle (Point 0 0 3) (Point 2 (-1) 4) (Point 1.5 (-1.5) 6)
+        Triangle (Point 0 2 3) (Point 2 2 4) (Point 3 2 5)
     ]
 
 chunks :: Int -> [a] -> [[a]]
@@ -141,7 +149,7 @@ chunks n xs =
     in  ys : chunks n zs
 
 renderAsciiViewPort :: Int -> Int -> [Char]
-renderAsciiViewPort width height = concatMap (\s -> s ++ "\r\n") (chunks width (map getBoolChar (castRays (getPerspectiveRays (ViewPort width height) (Rectangle (Point 0 0 0) 5 5) (Point 1 3 (-4))) getTestTriangles)))
+renderAsciiViewPort width height = concatMap (\s -> s ++ "\r\n") (chunks width (map getBoolChar (castRays (castFromCamera (ViewPort width height) (FieldOfView 120)) getTestTriangles)))
 
 testRayIntersection :: Ray -> Triangle -> IO ()
 testRayIntersection ray triangle =
