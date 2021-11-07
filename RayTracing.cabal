@@ -21,6 +21,17 @@ maintainer:         eberg@primera.com
 -- category:
 extra-source-files: CHANGELOG.md
 
+Test-Suite test-RayTracing
+    type:               exitcode-stdio-1.0
+    main-is:            Main.hs
+    hs-source-dirs:     app/test-Suite
+    build-depends:      base >=4.15.0.0,
+                        matrix,
+                        test-framework,
+                        test-framework-hunit,
+                        HUnit,
+                        containers >= 0.5.0
+
 executable RayTracing
     main-is:          Main.hs
 
@@ -29,6 +40,10 @@ executable RayTracing
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.15.0.0
-    hs-source-dirs:   app
+    build-depends:    base >=4.15.0.0,
+                      matrix
+    hs-source-dirs:   app/src
     default-language: Haskell2010
+    other-modules: Transformations,
+                   Triangle
+
