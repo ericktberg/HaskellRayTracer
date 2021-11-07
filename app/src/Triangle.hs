@@ -95,3 +95,5 @@ areaOfTriangle (Triangle p q r) normal = dotProduct (cross (vectorFromPoints p q
 
 doesRayIntersectTriangle :: Ray -> Triangle -> Bool
 doesRayIntersectTriangle ray triangle = isPointInTriangle (getIntersectionPoint ray (getPlaneFromTriangle triangle)) triangle
+
+rayFromPoints p1 p2 = Ray p1 (vectorFromPoints p1 p2)

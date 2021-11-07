@@ -21,17 +21,6 @@ maintainer:         eberg@primera.com
 -- category:
 extra-source-files: CHANGELOG.md
 
-Test-Suite test-RayTracing
-    type:               exitcode-stdio-1.0
-    main-is:            Main.hs
-    hs-source-dirs:     app/test-Suite
-    build-depends:      base >=4.15.0.0,
-                        matrix,
-                        test-framework,
-                        test-framework-hunit,
-                        HUnit,
-                        containers >= 0.5.0
-
 executable RayTracing
     main-is:          Main.hs
 
@@ -47,3 +36,14 @@ executable RayTracing
     other-modules: Transformations,
                    Triangle
 
+
+Test-Suite test-RayTracing
+    type:               exitcode-stdio-1.0
+    main-is:            Main.hs
+    hs-source-dirs:     app/test-Suite
+    build-depends:      base >=4.15.0.0,
+                        matrix,
+                        test-framework,
+                        test-framework-hunit,
+                        HUnit,
+                        containers >= 0.5.0

@@ -45,15 +45,17 @@ getPerspectiveRays :: ViewPort -> Rectangle -> Point -> [Ray]
 getPerspectiveRays  viewport rectangle point =
        map (Ray point . vectorFromPoints point) (getRectanglePoints viewport rectangle)
 
-
-castFromCamera :: ViewPort -> FieldOfView -> [Ray]
-castFromCamera viewport (FieldOfView fov) =
+getViewPortWindow :: ViewPort -> FieldOfView -> Rectangle
+getViewPortWindow viewport (FieldOfView fov) =
     let
         (ViewPort viewWidth viewHeight) = viewport
         aspectRatio = fromIntegral viewHeight / fromIntegral viewWidth
         widthFromFov = 2 * tan (fov * pi / 360)
     in
-        getPerspectiveRays viewport (Rectangle (Point 0 0 1) (widthFromFov / 2) (aspectRatio * widthFromFov)) (Point 0 0 0)
+        (Rectangle (Point 0 0 1) (widthFromFov / 2) (aspectRatio * widthFromFov))
+
+castFromCamera :: ViewPort -> FieldOfView -> [Ray]
+castFromCamera viewport fov = getPerspectiveRays viewport (getViewPortWindow viewport fov) (Point 0 0 0)
 
 castRays :: [Ray] -> [Triangle] -> [Bool]
 castRays rays triangles = map (\r -> any (doesRayIntersectTriangle r) triangles) rays
@@ -76,15 +78,48 @@ chunks n xs =
     let (ys, zs) = splitAt n xs
     in  ys : chunks n zs
 
+-- >>> getRotationMatrix (Degrees (-90)) (Degrees 0) (Degrees 0)
+--                      
+--   1.0  0.0  0.0  0.0 
+--   0.0  0.0 -1.0  0.0 
+--   0.0  1.0  0.0  0.0 
+--   0.0  0.0  0.0  1.0 
+--
+
+-- >>> getTranslationMatrix 0 3 6
+--                  
+--  1.0 0.0 0.0 0.0 
+--  0.0 1.0 0.0 3.0 
+--  0.0 0.0 1.0 6.0 
+--  0.0 0.0 0.0 1.0 
+--
+
+-- >>>  testTranslation `multStd` testRotation
+--                      
+--   1.0  0.0  0.0  0.0 
+--   0.0  0.0 -1.0  3.0 
+--   0.0  1.0  0.0  6.0 
+--   0.0  0.0  0.0  1.0 
+--
+-- >>>  rotateRay (Ray (Point 0 0 0) (Vector 0 0 1)) testTransformation
+-- Ray (Point 0.0 3.0 6.0) (Vector 0.0 2.0 6.0)
+--
 renderAsciiViewPort :: Int -> Int -> [Char]
 renderAsciiViewPort width height =
     let
-        rays = castFromCamera (ViewPort width height) (FieldOfView 120)
-        translation = getTranslationMatrix 0 4 6
-        rotation = getRotationMatrix (Degrees (90)) (Degrees 0) (Degrees 0)
-        transformation = translation `multStd` rotation
-        rotatedRays = map (flip rotateRay transformation) rays
-        rendering = castRays rotatedRays getTestTriangles
+        viewport = (ViewPort width height)
+        fov = (FieldOfView 120)
+        rect = getViewPortWindow viewport fov
+
+        testRotation = getRotationMatrix (Degrees (-90)) (Degrees 0) (Degrees 0)
+        testTranslation = getTranslationMatrix 0 3 5
+        testTransformation = testTranslation `multStd` testRotation
+        
+        windowPoints = map (flip rotatePoint testTransformation) (getRectanglePoints viewport rect)
+        startPoint = rotatePoint (Point 0 0 0) testTransformation
+        rays = map (\p -> rayFromPoints startPoint p) windowPoints
+
+        rendering = castRays rays getTestTriangles
     in
         concatMap (\s -> s ++ "\r\n") (chunks width (map getBoolChar rendering))
 

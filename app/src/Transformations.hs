@@ -89,12 +89,23 @@ zAxisRotationMatrixRadians (Radians angle) = fmap (coerceZero 0.0000001) $ matri
         indices (4, 4) = 1
         indices _ = 0
 
+-- | 
+-- Composes a rotation matrix around all 3 axes with rotation order x, y, z
+--
+-- >>> getRotationMatrix (Degrees 45) (Degrees 60) (Degrees 90)
+--                                                  
+--          0.0  0.49999997  0.86602545         0.0 
+--  -0.70710677 -0.61237246  0.35355335         0.0 
+--   0.70710677 -0.61237246  0.35355335         0.0 
+--          0.0         0.0         0.0         1.0 
+--
 getRotationMatrix :: Degrees -> Degrees -> Degrees -> Matrix Float
 getRotationMatrix xAxis yAxis zAxis = 
     (xRotationMatrixRadians (degreesToRadians xAxis)) `multStd` 
     (yAxisRotationMatrixRadians (degreesToRadians yAxis)) `multStd`
     (zAxisRotationMatrixRadians (degreesToRadians zAxis))
 
+-- |
 getTranslationMatrix :: Float -> Float -> Float -> Matrix Float
 getTranslationMatrix x y z = matrix 4 4 indices
     where
@@ -132,6 +143,3 @@ rotateVector vector rotationMatrix = matrixToVector $ multStd rotationMatrix (ve
 
 rotatePoint :: Point -> Matrix Float -> Point
 rotatePoint point rotationMatrix = matrixToPoint $ multStd rotationMatrix (pointToMatrix point)
-
-rotateRay :: Ray -> Matrix Float -> Ray
-rotateRay (Ray point vector) rotationMatrix = Ray (rotatePoint point rotationMatrix) (rotateVector vector rotationMatrix)
