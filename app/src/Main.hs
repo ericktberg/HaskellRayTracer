@@ -69,7 +69,7 @@ getBoolChar b = do
 getTestTriangles :: [Triangle]
 getTestTriangles = [
         Triangle (Point (-1) (-1) 5) (Point 0 1 5)  (Point 1 (-1) 5),
-        Triangle (Point (-1) (-1) 5) (Point 0 (-1) 9) (Point 1 (-1) 5)
+        Triangle (Point (-1) (-1) 6.5) (Point 0 (-1) 9) (Point 1 (-1) 6.5)
     ]
 
 chunks :: Int -> [a] -> [[a]]
@@ -111,8 +111,8 @@ renderAsciiViewPort width height =
         fov = (FieldOfView 120)
         rect = getViewPortWindow viewport fov
 
-        testRotation = getRotationMatrix (Degrees (-90)) (Degrees 0) (Degrees 0)
-        testTranslation = getTranslationMatrix 0 3 5
+        testRotation = getRotationMatrix (Degrees (-90)) (Degrees 0) (Degrees 45)
+        testTranslation = getTranslationMatrix 2 3 6
         testTransformation = testTranslation `multStd` testRotation
         
         windowPoints = map (flip rotatePoint testTransformation) (getRectanglePoints viewport rect)
