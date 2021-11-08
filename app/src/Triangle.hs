@@ -1,9 +1,9 @@
 module Triangle where
 
-data Point = Point Float Float Float deriving Show
-data Vector = Vector Float Float Float deriving Show
+import Vector
+import Point
+
 data Triangle = Triangle Point Point Point deriving Show
-data Ray = Ray Point Vector deriving Show
 -- Definition of scalar plane: ax + by + cz + d = 0
 data Plane = ScalarPlane Float Float Float Float deriving Show
 
@@ -31,37 +31,7 @@ getPlaneFromTriangle (Triangle p q r) =
     in
         ScalarPlane a b c d
 
-getIntersectionPoint :: Ray -> Plane -> Point
-getIntersectionPoint (Ray (Point px py pz) (Vector vx vy vz)) (ScalarPlane a b c d) =
-    let
-        t = - (a * px + b * py + c * pz + d) / (a * vx + b * vy + c * vz)
-    in
-        Point (px + vx * t) (py + vy * t) (pz + vz * t)
-
         
--- the cross product AxB is an vector orthogonal to both vectors
--- compute this using the determinant method
-cross :: Vector -> Vector -> Vector
-cross (Vector ax ay az) (Vector bx by bz) = Vector (ay * bz - az * by) (az * bx - ax * bz) (ax * by - ay * bx)
-
-dotProduct :: Vector -> Vector -> Float
-dotProduct (Vector ax ay az) (Vector bx by bz) = ax * bx + ay * by + az * bz
-
-normalize :: Vector -> Vector
-normalize vector =
-    let
-        (Vector vx vy vz) = vector
-        magnitude = vectorLength vector
-    in
-        Vector (vx / magnitude) (vy / magnitude) (vz / magnitude)
-
-vectorFromPoints :: Point -> Point -> Vector
-vectorFromPoints (Point p1x p1y p1z) (Point p2x p2y p2z) = Vector (p2x - p1x) (p2y - p1y) (p2z - p1z)
-
-
-vectorLength :: Vector -> Float
-vectorLength (Vector vx vy vz) = sqrt (vx^2 + vy^2 + vz^2)
-
 getBarycentricPoint :: Point -> Triangle -> Point
 getBarycentricPoint p triangle = let
         -- calculate the barycentric coordinates of the point
@@ -92,8 +62,3 @@ isPointInTriangle p triangle =
 
 areaOfTriangle :: Triangle -> Vector -> Float
 areaOfTriangle (Triangle p q r) normal = dotProduct (cross (vectorFromPoints p q) (vectorFromPoints p r)) normal / 2
-
-doesRayIntersectTriangle :: Ray -> Triangle -> Bool
-doesRayIntersectTriangle ray triangle = isPointInTriangle (getIntersectionPoint ray (getPlaneFromTriangle triangle)) triangle
-
-rayFromPoints p1 p2 = Ray p1 (vectorFromPoints p1 p2)

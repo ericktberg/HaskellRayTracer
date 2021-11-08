@@ -3,6 +3,8 @@ module Transformations where
 import Data.Matrix
 
 import Triangle
+import Point
+import Vector
 
 newtype Radians = Radians Float deriving Show
 newtype Degrees = Degrees Float deriving Show
@@ -28,8 +30,8 @@ radiansToDegrees (Radians value) = Degrees (value * 180 / pi)
 --                                                  
 --
 xRotationMatrixRadians :: Radians -> Matrix Float
-xRotationMatrixRadians (Radians angle) = fmap (coerceZero 0.0000001) $ matrix 4 4 indices
-    where 
+xRotationMatrixRadians (Radians angle) = coerceZero 0.0000001 <$> matrix 4 4 indices
+    where
         indices (1,1) = 1
         indices (2, 2) = cos angle
         indices (2, 3) = sin angle
@@ -51,8 +53,8 @@ xRotationMatrixRadians (Radians angle) = fmap (coerceZero 0.0000001) $ matrix 4 
 --          0.0         0.0         0.0         1.0 
 --         
 yAxisRotationMatrixRadians :: Radians -> Matrix Float
-yAxisRotationMatrixRadians (Radians angle) = fmap (coerceZero 0.0000001) $ matrix 4 4 indices
-    where 
+yAxisRotationMatrixRadians (Radians angle) = coerceZero 0.0000001 <$> matrix 4 4 indices
+    where
         indices (2,2) = 1
         indices (1, 1) = cos angle
         indices (1, 3) = sin angle
@@ -63,7 +65,7 @@ yAxisRotationMatrixRadians (Radians angle) = fmap (coerceZero 0.0000001) $ matri
 
 coerceZero :: Float -> Float -> Float
 coerceZero epsilon value    | value == 0 = 0
-                            | (abs value) < epsilon = 0
+                            | abs value < epsilon = 0
                             | value /= 0 = value
 
 -- |
@@ -79,8 +81,8 @@ coerceZero epsilon value    | value == 0 = 0
 --   0.0  0.0  0.0  1.0 
 --
 zAxisRotationMatrixRadians :: Radians -> Matrix Float
-zAxisRotationMatrixRadians (Radians angle) = fmap (coerceZero 0.0000001) $ matrix 4 4 indices
-    where 
+zAxisRotationMatrixRadians (Radians angle) = coerceZero 0.0000001 <$> matrix 4 4 indices
+    where
         indices (3,3) = 1
         indices (1, 1) = cos angle
         indices (1, 2) = sin angle
@@ -100,10 +102,10 @@ zAxisRotationMatrixRadians (Radians angle) = fmap (coerceZero 0.0000001) $ matri
 --          0.0         0.0         0.0         1.0 
 --
 getRotationMatrix :: Degrees -> Degrees -> Degrees -> Matrix Float
-getRotationMatrix xAxis yAxis zAxis = 
-    (xRotationMatrixRadians (degreesToRadians xAxis)) `multStd` 
-    (yAxisRotationMatrixRadians (degreesToRadians yAxis)) `multStd`
-    (zAxisRotationMatrixRadians (degreesToRadians zAxis))
+getRotationMatrix xAxis yAxis zAxis =
+    xRotationMatrixRadians (degreesToRadians xAxis) `multStd`
+    yAxisRotationMatrixRadians (degreesToRadians yAxis) `multStd`
+    zAxisRotationMatrixRadians (degreesToRadians zAxis)
 
 -- |
 getTranslationMatrix :: Float -> Float -> Float -> Matrix Float
@@ -126,20 +128,11 @@ scalarsToMatrix x y z = matrix 4 1 indices
         indices (3, 1) = z
         indices (4, 1) = 1
 
-vectorToMatrix :: Vector -> Matrix Float
-vectorToMatrix (Vector x y z) = scalarsToMatrix x y z
-
 pointToMatrix :: Point -> Matrix Float
 pointToMatrix (Point x y z) = scalarsToMatrix x y z
 
-matrixToVector :: Matrix Float -> Vector
-matrixToVector vectorMatrix = Vector (getElem 1 1 vectorMatrix) (getElem 2 1 vectorMatrix) (getElem 3 1 vectorMatrix)
-
 matrixToPoint :: Matrix Float -> Point
 matrixToPoint vectorMatrix = Point (getElem 1 1 vectorMatrix) (getElem 2 1 vectorMatrix) (getElem 3 1 vectorMatrix)
-
-rotateVector :: Vector -> Matrix Float -> Vector
-rotateVector vector rotationMatrix = matrixToVector $ multStd rotationMatrix (vectorToMatrix vector)
 
 rotatePoint :: Point -> Matrix Float -> Point
 rotatePoint point rotationMatrix = matrixToPoint $ multStd rotationMatrix (pointToMatrix point)

@@ -4,7 +4,9 @@ import Data.Matrix
 
 import Triangle
 import Transformations
-
+import Point
+import Vector
+import Ray
 
 newtype FieldOfView = FieldOfView Float -- FOV
 
@@ -31,7 +33,7 @@ getIsometricRays (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) uni
 
 
 getRectanglePoints :: ViewPort -> Rectangle -> [Point]
-getRectanglePoints (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) unitWidth unitHeight) = 
+getRectanglePoints (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) unitWidth unitHeight) =
     let
         widthIncrement = unitWidth / fromIntegral viewWidth;
         heightIncrement = unitHeight / fromIntegral viewHeight;
@@ -52,7 +54,7 @@ getViewPortWindow viewport (FieldOfView fov) =
         aspectRatio = fromIntegral viewHeight / fromIntegral viewWidth
         widthFromFov = 2 * tan (fov * pi / 360)
     in
-        (Rectangle (Point 0 0 1) (widthFromFov / 2) (aspectRatio * widthFromFov))
+        Rectangle (Point 0 0 1) (widthFromFov / 2) (aspectRatio * widthFromFov)
 
 castFromCamera :: ViewPort -> FieldOfView -> [Ray]
 castFromCamera viewport fov = getPerspectiveRays viewport (getViewPortWindow viewport fov) (Point 0 0 0)
@@ -107,21 +109,21 @@ chunks n xs =
 renderAsciiViewPort :: Int -> Int -> [Char]
 renderAsciiViewPort width height =
     let
-        viewport = (ViewPort width height)
-        fov = (FieldOfView 120)
+        viewport = ViewPort width height
+        fov = FieldOfView 120
         rect = getViewPortWindow viewport fov
 
         testRotation = getRotationMatrix (Degrees (-90)) (Degrees 0) (Degrees 45)
         testTranslation = getTranslationMatrix 2 3 6
         testTransformation = testTranslation `multStd` testRotation
-        
-        windowPoints = map (flip rotatePoint testTransformation) (getRectanglePoints viewport rect)
+
+        windowPoints = map (`rotatePoint` testTransformation) (getRectanglePoints viewport rect)
         startPoint = rotatePoint (Point 0 0 0) testTransformation
-        rays = map (\p -> rayFromPoints startPoint p) windowPoints
+        rays = map (rayFromPoints startPoint) windowPoints
 
         rendering = castRays rays getTestTriangles
     in
-        concatMap (\s -> s ++ "\r\n") (chunks width (map getBoolChar rendering))
+        concatMap (++ "\r\n") (chunks width (map getBoolChar rendering))
 
 testRayIntersection :: Ray -> Triangle -> IO ()
 testRayIntersection ray triangle =

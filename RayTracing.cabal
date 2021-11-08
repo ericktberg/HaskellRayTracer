@@ -34,7 +34,10 @@ executable RayTracing
     hs-source-dirs:   app/src
     default-language: Haskell2010
     other-modules: Transformations,
-                   Triangle
+                   Triangle,
+                   Point,
+                   Vector,
+                   Ray
 
 
 Test-Suite test-RayTracing
