@@ -1,13 +1,14 @@
 module Main where
 
 import Data.Matrix
+import System.IO
 
 import Triangle
 import Transformations
 import Point
-import Vector
 import Ray
 import Camera
+import Text.Printf (printf, hPrintf)
 
 getBoolChar :: Bool -> Char
 getBoolChar b = do
@@ -69,19 +70,13 @@ renderAsciiViewPort width height =
     in
         concatMap (++ "\r\n") (chunks width (map getBoolChar rendering))
 
-testRayIntersection :: Ray -> Triangle -> IO ()
-testRayIntersection ray triangle =
-    let
-        intersection = getIntersectionPoint ray (getPlaneFromTriangle triangle)
-        barycentric = getBarycentricPoint intersection triangle
-        normal = normalOfTriangle triangle
-    in do
-        print ("Triangle: " ++ show triangle)
-        print ("Normal: " ++ show normal)
-        print ("Area: " ++ show (areaOfTriangle triangle normal))
-        print ("Intersection Point: " ++ show intersection)
-        print ("Barycentric: " ++ show barycentric)
-        print ("Does Ray Intersect: " ++ show (doesRayIntersectTriangle ray triangle))
-
 main :: IO ()
-main = putStr (renderAsciiViewPort 200 100)
+main = 
+    let 
+        output = renderAsciiViewPort 200 100
+    in
+    do 
+        outputHandle <- openFile "output.txt" WriteMode
+        printf output
+        hPrintf outputHandle output
+        hClose outputHandle
