@@ -30,7 +30,9 @@ executable RayTracing
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:    base >=4.15.0.0,
-                      matrix
+                      matrix,
+                      pgm,
+                      array
     hs-source-dirs:   app/src
     default-language: Haskell2010
     other-modules: Transformations,
