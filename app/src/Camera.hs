@@ -35,7 +35,7 @@ getRenderWindow (RenderedRegion viewWidth viewHeight) (FieldOfView fov) =
         aspectRatio = fromIntegral viewHeight / fromIntegral viewWidth
         widthFromFov = 2 * tan (fov * pi / 360)
     in
-        Rectangle (Point 0 0 1) (widthFromFov / 2) (aspectRatio * widthFromFov)
+        Rectangle (Point 0 0 1) widthFromFov (aspectRatio * widthFromFov)
 
 -- |
 -- Compute the array of rays associated with a camera.
