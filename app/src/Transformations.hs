@@ -15,7 +15,6 @@ degreesToRadians (Degrees value) = Radians (value * pi / 180)
 radiansToDegrees :: Radians -> Degrees
 radiansToDegrees (Radians value) = Degrees (value * 180 / pi)
 
-
 -- |
 -- Creates a rotation matrix around the x-axis
 -- Because of floating point error, values that should be zero from sin and cos are not.

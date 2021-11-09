@@ -37,7 +37,8 @@ executable RayTracing
                    Triangle,
                    Point,
                    Vector,
-                   Ray
+                   Ray,
+                   Camera
 
 
 Test-Suite test-RayTracing

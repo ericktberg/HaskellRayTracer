@@ -3,6 +3,7 @@ module Ray where
 import Point
 import Vector
 import Triangle
+import Triangle (Triangle(Triangle))
 
 data Ray = Ray Point Vector deriving Show
 
@@ -15,6 +16,11 @@ getIntersectionPoint (Ray (Point px py pz) (Vector vx vy vz)) (ScalarPlane a b c
     in
         Point (px + vx * t) (py + vy * t) (pz + vz * t)
 
-
 doesRayIntersectTriangle :: Ray -> Triangle -> Bool
 doesRayIntersectTriangle ray triangle = isPointInTriangle (getIntersectionPoint ray (getPlaneFromTriangle triangle)) triangle
+
+doesRayIntersectScene :: Ray -> [Triangle] -> Bool
+doesRayIntersectScene r = any (doesRayIntersectTriangle r)
+
+castRays :: [Ray] -> [Triangle] -> [Bool]
+castRays rays triangles = map (`doesRayIntersectScene` triangles) rays

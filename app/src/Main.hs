@@ -7,60 +7,7 @@ import Transformations
 import Point
 import Vector
 import Ray
-
-newtype FieldOfView = FieldOfView Float -- FOV
-
-data Rectangle = Rectangle Point Float Float
-
-
--- The viewport is the width then height, in pixels, to render along the width and height, in units.
-data ViewPort = ViewPort Int Int
-
-
--- Given a viewport and a vector to cast along, get the list of all rays to cast
-getIsometricRays :: ViewPort -> Rectangle -> Vector -> [Ray]
-getIsometricRays (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) unitWidth unitHeight) vector =
-    let
-        widthIncrement = unitWidth / fromIntegral viewWidth;
-        heightIncrement = unitHeight / fromIntegral viewHeight;
-        (Point topLeftX topLeftY topLeftZ) = Point (px - unitWidth / 2) (py + unitHeight / 2) pz
-
-        -- the ray cast from each row is found at a point based on both the row and columnIndex index
-        -- take the row index a
-        getRow rowIndex = map (\columnIndex -> Ray (Point (topLeftX + fromIntegral columnIndex * widthIncrement) (topLeftY - fromIntegral rowIndex * heightIncrement) topLeftZ) vector) [0..viewWidth - 1]
-    in
-        concatMap getRow [0..viewHeight - 1]
-
-
-getRectanglePoints :: ViewPort -> Rectangle -> [Point]
-getRectanglePoints (ViewPort viewWidth viewHeight) (Rectangle (Point px py pz) unitWidth unitHeight) =
-    let
-        widthIncrement = unitWidth / fromIntegral viewWidth;
-        heightIncrement = unitHeight / fromIntegral viewHeight;
-        (Point topLeftX topLeftY topLeftZ) = Point (px - unitWidth / 2) (py + unitHeight / 2) pz
-        getPoint rowIndex columnIndex = Point (topLeftX + fromIntegral columnIndex * widthIncrement) (topLeftY - fromIntegral rowIndex * heightIncrement) topLeftZ
-        getRow rowIndex = map (getPoint rowIndex) [0..viewWidth - 1]
-    in
-        concatMap getRow [0..viewHeight - 1]
-
-getPerspectiveRays :: ViewPort -> Rectangle -> Point -> [Ray]
-getPerspectiveRays  viewport rectangle point =
-       map (Ray point . vectorFromPoints point) (getRectanglePoints viewport rectangle)
-
-getViewPortWindow :: ViewPort -> FieldOfView -> Rectangle
-getViewPortWindow viewport (FieldOfView fov) =
-    let
-        (ViewPort viewWidth viewHeight) = viewport
-        aspectRatio = fromIntegral viewHeight / fromIntegral viewWidth
-        widthFromFov = 2 * tan (fov * pi / 360)
-    in
-        Rectangle (Point 0 0 1) (widthFromFov / 2) (aspectRatio * widthFromFov)
-
-castFromCamera :: ViewPort -> FieldOfView -> [Ray]
-castFromCamera viewport fov = getPerspectiveRays viewport (getViewPortWindow viewport fov) (Point 0 0 0)
-
-castRays :: [Ray] -> [Triangle] -> [Bool]
-castRays rays triangles = map (\r -> any (doesRayIntersectTriangle r) triangles) rays
+import Camera
 
 getBoolChar :: Bool -> Char
 getBoolChar b = do
@@ -109,17 +56,14 @@ chunks n xs =
 renderAsciiViewPort :: Int -> Int -> [Char]
 renderAsciiViewPort width height =
     let
-        viewport = ViewPort width height
         fov = FieldOfView 120
-        rect = getViewPortWindow viewport fov
+        camera = PerspectiveCam (RenderedRegion width height) fov
 
         testRotation = getRotationMatrix (Degrees (-90)) (Degrees 0) (Degrees 45)
         testTranslation = getTranslationMatrix 2 3 6
         testTransformation = testTranslation `multStd` testRotation
 
-        windowPoints = map (`rotatePoint` testTransformation) (getRectanglePoints viewport rect)
-        startPoint = rotatePoint (Point 0 0 0) testTransformation
-        rays = map (rayFromPoints startPoint) windowPoints
+        rays = calculateRays camera testTransformation
 
         rendering = castRays rays getTestTriangles
     in
